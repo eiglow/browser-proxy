@@ -10,7 +10,7 @@ require_once("config.php");
 
 // REVIEW: use relative directories properly you idiot
 require_once(__DIR__ . "/../lib/simple_html_dom.php");
-require_once(__DIR__ . "/../lib/helper.php");
+require_once(__DIR__ . "helper.php");
 
 $requestGETData = (object) [
 	"url" => base64_decode($_GET["url"]),
