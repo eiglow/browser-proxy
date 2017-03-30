@@ -10,7 +10,7 @@ require_once("config.php");
 
 // REVIEW: use relative directories properly you idiot
 require_once(__DIR__ . "/../lib/simple_html_dom.php");
-require_once(__DIR__ . "helper.php");
+require_once("helper.php");
 
 $requestGETData = (object) [
 	"url" => base64_decode($_GET["url"]),
@@ -120,6 +120,7 @@ $mime_type_objectlist = [
 	"application/x-shockwave-flash"
 ];
 
+// REVIEW: there's probably a fair bit to DRY up here
 switch ($_SERVER["REQUEST_METHOD"]) {
 	case "POST":
 		// TODO: find a way to handle headers
