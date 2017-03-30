@@ -1,0 +1,129 @@
+body {
+	margin:0;
+	overflow:hidden;
+}
+* {
+	outline:none;
+	box-sizing:border-box;
+}
+
+/* HELPER STYLES */
+.unselectable {
+	-moz-user-select:none;
+	-webkit-user-select:none;
+	-ms-user-select:none;
+	user-select:none;
+	-o-user-select:none;
+}
+
+#toolbar {
+	background-color:#000;
+	color:#fff;
+	font-family:"Open Sans", verdana, sans-serif;
+	position:fixed;
+	height:100px;
+	width:100%;
+	-webkit-box-shadow:0px 0px 15px 5px rgba(0,0,0,0.75);
+	-moz-box-shadow:0px 0px 15px 5px rgba(0,0,0,0.75);
+	box-shadow:0px 0px 15px 5px rgba(0,0,0,0.75);
+}
+div.half {
+	height:50px;
+	line-height:50px;
+	border-bottom:1px solid #fff;
+}
+
+#url {
+	border:none;
+	height:49px;
+	font-size:30px;
+	width:calc(100% - 150px);
+	font-weight:300;
+	padding-left:5px;
+	font-family:"Open Sans", verdana;
+	color:#aaa;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+	display:inline-block;
+}
+#url:focus, #url:hover {
+	color:#fff;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+}
+span.url-faded {
+	color:#888;
+}
+.toolbutton {
+	height:49px;
+	width:50px;
+	float:right;
+	font-size:30px;
+	background-color:#fff;
+	border:none;
+	border-left:1px solid #fff;
+	background-color:#000;
+	color:#fff;
+	cursor:pointer;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+}
+.toolbutton:hover {
+	background-color:#fff;
+	color:#000;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+}
+#toolbar toggle {
+	font-size:30px;
+	float:left;
+	padding:0 5px;
+	height:50px;
+	line-height:50px;
+	color:#000;
+	border-right:1px solid #fff;
+	cursor:pointer;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+}
+#toolbar toggle:hover {
+	color:#fff;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+}
+#toolbar toggle.disabled {
+	background-color:#f33;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+}
+#toolbar toggle.enabled {
+	background-color:#3f3;
+	transition:all 0.3s;
+	-webkit-transition:all 0.3s;
+	-moz-transition:all 0.3s
+	-o-transition:all 0.3s;
+}
+#frame {
+	border:none;
+	width:100%;
+	height:calc(100vh - 100px);
+	margin-top:100px;
+}
+.tooltip {
+	visibility:hidden;
+	position:absolute;
+}
