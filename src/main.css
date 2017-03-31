@@ -34,6 +34,8 @@ div.half {
 }
 
 #url {
+	-moz-appearance:textfield;
+	-webkit-appearance:textfield;
 	border:none;
 	height:49px;
 	font-size:30px;
@@ -47,6 +49,21 @@ div.half {
 	-moz-transition:all 0.3s
 	-o-transition:all 0.3s;
 	display:inline-block;
+	white-space:nowrap;
+	
+	overflow-x:scroll;
+    padding-bottom:17px;
+	/* hide scrollbar on IE only */
+	-ms-overflow-style:none;
+	
+	z-index:1;
+}
+/* remove the horizontal scrollbar in the url bar, to make it function like a text box
+  however this doesn't work in browsers other than chrome */
+#url::-webkit-scrollbar {
+    width: 0px;  /* remove scrollbar space */
+	height:0px;
+    background: transparent;  /* optional: just make scrollbar invisible */
 }
 #url:focus, #url:hover {
 	color:#fff;
@@ -73,6 +90,7 @@ span.url-faded {
 	-webkit-transition:all 0.3s;
 	-moz-transition:all 0.3s
 	-o-transition:all 0.3s;
+	z-index:2;
 }
 .toolbutton:hover {
 	background-color:#fff;
