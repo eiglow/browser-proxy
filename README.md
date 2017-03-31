@@ -4,4 +4,4 @@ It is designed to modify pages so that all the resources are redirected through 
 
 This, of course, relies on the proxy server itself not being blocked.
 
-*This software was tested using PHP 7.0 on Apache for Windows, using other versions may have unintended sideffects.*
+*This software was tested using PHP 7.0 on Apache for Windows, using other versions of PHP may have unintended sideffects.*
