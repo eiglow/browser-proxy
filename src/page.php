@@ -9,7 +9,7 @@
 require_once("config.php");
 
 // REVIEW: use relative directories properly you idiot
-require_once(__DIR__ . "/../lib/simple_html_dom.php");
+require_once("../lib/simple-html-dom.php");
 require_once("helper.php");
 
 $requestGETData = (object) [
@@ -24,10 +24,19 @@ info("info", "URL: " . $requestGETData->url);
 $reqMimeType = mime_type($requestGETData->url);
 info("info", "Content-type: " . $reqMimeType);
 
-$convertURL = function ($original) use ($requestGETData) {
+/*
+ * Converts a URL to go through the proxy.
+ * param (string)$original: the URL to convert
+ * param (int)$type: conversion mode, 0 is navigation, 1 is resource
+ */
+$convertURL = function ($original, $type) use ($requestGETData) {
 	
-	info("info", "Converting " . $original);
+	info("info", "<b>Converting</b> " . $original);
 	$parsedurl = parse_url($original);
+	if (!$parsedurl) {
+		info("warn", "Badly formed URL $original");
+		return false;
+	}
 	
 	if ($requestGETData->base) {
 		// if the request is to a root directory, make sure two slashes don't go next to eachother
@@ -38,16 +47,18 @@ $convertURL = function ($original) use ($requestGETData) {
 		}
 	} else {
 		// adds a scheme if there isn't one already (REVIEW: is this necessary?)
-		if (strlen($parsedurl->scheme) < 1) {
+		if (isset($parsedurl["scheme"])) {
 			$original = "http:" + $original;
 		}
 	}
 	
 	$convTo = "page.php?url=" . urlencode(base64_encode($original)) .
-	"&scripts=" . $requestGETData->scripts .
-	"&cookies=" . $requestGETData->cookies .
-	"&objects=" . $requestGETData->objects .
-	"&base=" . urlencode($requestGETData->base ? base64_encode($requestGETData->base) : $requestGETData->url);
+	($type ?
+		"&base=" . urlencode($requestGETData->base ? base64_encode($requestGETData->base) : $requestGETData->url)
+	:
+		"&scripts=" . $requestGETData->scripts . "&cookies=" . $requestGETData->cookies . "&objects=" . $requestGETData->objects
+	);
+	
 	// the base is used to convert relative urls to absolute ones, the initial requests won't have a base but the subsequent ones will
 	
 	info("info", "<b>Converted to</b> " . $convTo);
@@ -56,6 +67,10 @@ $convertURL = function ($original) use ($requestGETData) {
 	
 };
 
+/*
+ * Attempts to process JS to convert URLs. (WIP)
+ * param (string)$code: the code to process
+ */
 $processJS = function ($code) use ($convertURL) {
 	
 	info("info", "<b>Processing JS:</b> " . $code);
@@ -66,7 +81,7 @@ $processJS = function ($code) use ($convertURL) {
 		"#(src\s*=\s*[\"\'])(.+)([\"|\'])#",
 		function ($m) use ($convertURL) {
 			info("info", "<b>Found URL</b>");
-			return $m[1];
+			return $convertURL($m[1], 1);
 		},
 		$process
 	);
@@ -74,7 +89,7 @@ $processJS = function ($code) use ($convertURL) {
 		"#(href\s*=\s*[\"\'])(.+)([\"|\'])#",
 		function ($m) use ($convertURL) {
 			info("info", "<b>Found URL</b>");
-			return $m[1];
+			return $convertURL($m[1], 1);
 		},
 		$process
 	);
@@ -82,6 +97,10 @@ $processJS = function ($code) use ($convertURL) {
 	return $process;
 	
 };
+/*
+ * Grabs the URLs in CSS url() functions, and converts them.
+ * param (string)$code: the code to process
+ */
 $processCSS = function ($code) use ($convertURL) {
 	
 	info("info", "<b>Processing CSS</b> with " . strlen($code) . " length");
@@ -89,7 +108,7 @@ $processCSS = function ($code) use ($convertURL) {
 	return preg_replace_callback(
 		"#(url\([\"|\']?)([\w\s/.&=%?]+)(?=[\"|\']?\);?)#",
 		function ($m) use ($convertURL) {
-			$replace = $convertURL(str_replace(array('"', "'", "(", ")"), '', $m[2])) . "'"; // the str_replace is for removing quotes and brackets around the urls
+			$replace = $convertURL(str_replace(array('"', "'", "(", ")"), '', $m[2]), 1) . "'"; // the str_replace is for removing quotes and brackets around the urls
 			info("info", "<b>Found URL:</b> $m[2], replacing with $replace");
 			return "url('" . $replace;
 		},
@@ -106,6 +125,7 @@ if (isset($file) && $file !== null) {
 	die();
 }
 
+// These types don't need processing before being sent
 $mime_type_whitelist = [
 	"image/png",
 	"image/gif",
@@ -120,7 +140,6 @@ $mime_type_objectlist = [
 	"application/x-shockwave-flash"
 ];
 
-// REVIEW: there's probably a fair bit to DRY up here
 switch ($_SERVER["REQUEST_METHOD"]) {
 	case "POST":
 		// TODO: find a way to handle headers
@@ -161,29 +180,39 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 			}
 			$elems = [];
 			
-			// convert all hrefs
-			$elems = $html->find("*[href]");
+			// TODO: DRY this up a bit, theres a lot of repetition
+			// convert all link hrefs
+			$elems = $html->find("link[href]");
 			foreach ($elems as $thiselem) {
-				if ($thiselem->tag !== "a") {
-					$thiselem->href = $convertURL($thiselem->href);
+				if ($thiselem->tag === "link") {
+					$thiselem->href = $convertURL($thiselem->href, 1);
 				}
 			}
+			/* This is unecessary because the frontend handles the navigation links
+			// convert all a hrefs
+			$elems = $html->find("a[href]");
+			foreach ($elems as $thiselem) {
+				if ($thiselem->tag === "a") {
+					$thiselem->href = $convertURL($thiselem->href, 0);
+				}
+			}
+			*/
 			// convert all srcs
 			$elems = $html->find("*[src]");
 			foreach ($elems as $thiselem) {
-				$thiselem->src = $convertURL($thiselem->src);
+				$thiselem->src = $convertURL($thiselem->src, 1);
 			}
 			
 			// convert all form actions
 			$elems = $html->find("form[action]");
 			foreach ($elems as $thiselem) {
-				$thiselem->action = $convertURL($thiselem->action);
+				$thiselem->action = $convertURL($thiselem->action, 0);
 			}
 			
 			// convert all url()s in css
 			$elems = $html->find("style");
 			foreach ($elems as $thiselem) {
-				$thiselem->innertext = $processCSS($thiselem->innertext);
+				$thiselem->innertext = $processCSS($thiselem->innertext, 1);
 			}
 			
 			// process in-tag css
@@ -194,10 +223,21 @@ switch ($_SERVER["REQUEST_METHOD"]) {
 			
 			if ($requestGETData->scripts == "false") {
 				
-				// remove scripts$elems = 
+				// remove script elems
 				$elems = $html->find("script");
 				foreach ($elems as $thiselem) {
 					$thiselem->outertext = "";
+				}
+				
+				// remove "on*" events in tags
+				$elems = $html->find("*[onload], *[onunload], *[onclick], *[onmouseover], *[onblur], *[onkeypress]");
+				foreach ($elems as $thiselem) {
+					$thiselem->onload = null;
+					$thiselem->onunload = null;
+					$thiselem->onclick = null;
+					$thiselem->onmouseover = null;
+					$thiselem->onblur = null;
+					$thiselem->onkeypress = null;
 				}
 				
 			}
