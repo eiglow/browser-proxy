@@ -28,6 +28,8 @@ var UIElems = {
 // Regex from http://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript#answer-21553982
 function prettifyURL(toPretty) {
 	
+	console.log("Prettifying " + toPretty);
+	
 	toPretty = toPretty.replace(/\r?\n|\r/g, "");
 	var match = toPretty.match(/^(https?\:)\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
     
@@ -37,7 +39,7 @@ function prettifyURL(toPretty) {
 	
 }
 
-// Interface for the URL bar.
+// Interface for the URL bar. Reasoning for this being a class is to make it into tabs later
 // Get the current URL with curBrowserState.curPage()
 // Set it with curBrowserState.curPage("http://example.com")
 function browserState() {
@@ -52,8 +54,12 @@ function browserState() {
 };
 var curBrowserState = new browserState();
 
-// Processes the links in the page within the frame. Don't think it works yet
+// Processes the links in the page within the frame.
 // TODO: review and test
+function internalNavigate(url) {
+	curBrowserState.curPage(url);
+	navigateTo();
+}
 function processLinks() {
 	console.log("Processing links...");
 	var innerDoc = UIElems.frame.contentDocument || UIElems.frame.contentWindow.document;
@@ -64,10 +70,7 @@ function processLinks() {
 		let tempurl = links[i].href;
 		if (tempurl) {
 			links[i].href = ""; // don't remove the href tag because it won't look like a link anymore
-			links[i].addEventListener("click", function() {
-				curBrowserState.curPage(tempurl);
-				navigateTo();
-			});
+			links[i].addEventListener("click", internalNavigate.call(tempurl));
 		}
 	}
 }
@@ -100,7 +103,11 @@ function forward() {
 }
 
 var GETData = [];
-function page(url, scriptsState = pageSettings[0].className, cookiesState = pageSettings[1].className, objectsState = pageSettings[2].className) {
+function page(url, scriptsState, cookiesState, objectsState) {
+	
+	scriptsState = scriptsState || pageSettings[0].className;
+	cookiesState = cookiesState || pageSettings[1].className;
+	objectsState = objectsState || pageSettings[2].className;
 	
 	GETData.url = encodeURIComponent(window.btoa(url));
 	GETData.scripts = pageSettings[0].classList.contains("enabled");
@@ -133,7 +140,6 @@ UIElems.back.addEventListener("click", back);
 UIElems.forward.addEventListener("click", forward);
 
 UIElems.url.addEventListener("keypress", function(e) {
-	//UIElems.url.innerHTML = UIElems.url.innerHTML.replace(/\n/g, "");
 	if (e.keyCode == 13) { // if enter pressed
 		e.preventDefault();
 		curBrowserState.curPage(UIElems.url.innerText);
